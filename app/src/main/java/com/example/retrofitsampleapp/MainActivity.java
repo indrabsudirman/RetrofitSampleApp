@@ -36,12 +36,26 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<List<Post>>() {
             @Override
             public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+                if (!response.isSuccessful()) {
+                    mainBinding.textResult.setText("Code " + response.code());
+                    return;
+                }
+                List<Post> posts = response.body();
 
+                for (Post post : posts) {
+                    String content = "";
+                    content += "ID: " + post.getId() + " \n";
+                    content += "User ID: " + post.getUserId() + " \n";
+                    content += "Title: " + post.getTitle() + " \n";
+                    content += "Text: " + post.getText() + " \n\n";
+
+                    mainBinding.textResult.append(content);
+                }
             }
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
-
+                mainBinding.textResult.setText(t.getMessage());
             }
         });
     }
