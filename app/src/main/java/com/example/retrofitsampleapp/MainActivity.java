@@ -17,6 +17,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding mainBinding;
+    private JsonPlaceHolderApi jsonPlaceHolderApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,9 +30,14 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
+        jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
 
-        Call<List<Post>> call = jsonPlaceHolderApi.getPost();
+        getPost();
+//        getComment();
+    }
+
+    private void getPost() {
+        Call<List<Post>> call = jsonPlaceHolderApi.getPost(new Integer[]{1, 3, 4}, null, null);
 
         call.enqueue(new Callback<List<Post>>() {
             @Override
@@ -55,6 +61,37 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
+                mainBinding.textResult.setText(t.getMessage());
+            }
+        });
+    }
+
+    private void getComment() {
+        Call <List<Comment>> call = jsonPlaceHolderApi.getComment(3);
+
+        call.enqueue(new Callback<List<Comment>>() {
+            @Override
+            public void onResponse(Call<List<Comment>> call, Response<List<Comment>> response) {
+                if (!response.isSuccessful()) {
+                    mainBinding.textResult.setText("Code " + response.code());
+                    return;
+                }
+                List<Comment> comments = response.body();
+
+                for (Comment comment : comments) {
+                    String content = "";
+                    content += "ID: " + comment.getId() + " \n";
+                    content += "Post ID: " + comment.getPostId() + " \n";
+                    content += "Name: " + comment.getName() + " \n";
+                    content += "Email: " + comment.getEmail() + " \n";
+                    content += "Text: " + comment.getText() + " \n\n";
+
+                    mainBinding.textResult.append(content);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Comment>> call, Throwable t) {
                 mainBinding.textResult.setText(t.getMessage());
             }
         });
