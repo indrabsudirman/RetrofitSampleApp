@@ -1,5 +1,6 @@
 package com.example.retrofitsampleapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -8,11 +9,14 @@ import com.example.retrofitsampleapp.databinding.ActivityMainBinding;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,13 +41,21 @@ public class MainActivity extends AppCompatActivity {
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .addInterceptor(chain -> {
+                    Request originalRequest = chain.request();
+
+                    Request newRequest = originalRequest.newBuilder()
+                            .addHeader("Indra", "Jabriko")
+                            .build();
+                    return chain.proceed(newRequest);
+                })
                 .addInterceptor(loggingInterceptor)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://jsonplaceholder.typicode.com/")
                 .addConverterFactory(GsonConverterFactory.create(gson))
-//                .client(okHttpClient)
+                .client(okHttpClient)
                 .build();
 
         jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
@@ -162,7 +174,11 @@ public class MainActivity extends AppCompatActivity {
     private void updatePost() {
         Post post = new Post(12, null, "New Text");
 
-        Call<Post> call = jsonPlaceHolderApi.patchPost(5, post);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Map-Header1", "Indra");
+        headers.put("Map-Header2", "Lubna");
+
+        Call<Post> call = jsonPlaceHolderApi.patchPost(headers,5, post);
 
         call.enqueue(new Callback<Post>() {
             @Override
